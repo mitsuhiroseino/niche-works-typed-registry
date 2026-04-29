@@ -1,4 +1,4 @@
-import type { StoreEntry } from '../types';
+import type { StoreEntry } from '../_types';
 
 /**
  * エントリーを保持するためのクラス
@@ -27,7 +27,8 @@ export default class Store<CategoryType extends unknown = unknown> {
    * @param entry 登録する要素
    */
   set(entry: StoreEntry<CategoryType>) {
-    this._entries.set(entry.key, entry);
+    const { tags = [], ...rest } = entry;
+    this._entries.set(entry.key, { tags, ...rest });
   }
 
   /**

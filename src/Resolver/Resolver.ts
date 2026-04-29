@@ -1,5 +1,6 @@
+import type { ResolverFunction } from '../_types';
 import Store from '../Store';
-import type { ResolveOptions, ResolverFunction, ResolverType } from '../types';
+import type { ResolveOptions, ResolverType } from '../types';
 import resolvers from './resolvers';
 
 /**

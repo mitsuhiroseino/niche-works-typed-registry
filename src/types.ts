@@ -1,19 +1,7 @@
 /**
- * カテゴリー毎の型定義
+ * リゾルバー種別
  */
-export type CategoryTypeMap = Record<string, unknown>;
-
-/**
- * カテゴリー毎の型定義から取得可能なカテゴリーのキー
- */
-export type CategoryKey<Categories extends CategoryTypeMap> = keyof Categories;
-
-/**
- * カテゴリー毎の型定義から取得可能なカテゴリーの値
- */
-export type CategoryValue<
-  Categories extends CategoryTypeMap = CategoryTypeMap,
-> = Categories[keyof Categories];
+export type ResolverType = 'instance' | 'factory' | 'reference' | 'clone';
 
 /**
  * 登録可能なもの
@@ -22,21 +10,6 @@ export type Registrable<T> =
   | (new (...args: any[]) => T) // クラス
   | ((...args: any[]) => T) // ファクトリー関数
   | T; // 値そのもの
-
-/**
- * リゾルバー種別
- */
-export type ResolverType = 'instance' | 'factory' | 'reference' | 'clone';
-
-/**
- * 保存されたエントリー
- */
-export type StoreEntry<T = any> = Required<RegistrationEntry<T>> & {
-  /**
-   * シングルトン用の値
-   */
-  value?: T;
-};
 
 /**
  * 登録する情報
@@ -77,11 +50,6 @@ export type RegisterOptions = {
   tags?: string[];
 
   /**
-   * 任意の情報
-   */
-  metadata?: Record<string, any>;
-
-  /**
    * シングルトン
    * 初回に返したものと同じインスタンスを返し続ける
    */
@@ -97,11 +65,3 @@ export type ResolveOptions<Args extends unknown[] = unknown[]> = {
    */
   args?: Args;
 };
-
-/**
- * 値の解決関数
- */
-export type ResolverFunction<T = any> = (
-  entry: StoreEntry<T>,
-  options: ResolveOptions,
-) => T;

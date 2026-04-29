@@ -1,13 +1,15 @@
-import TypedRegistry from '../TypedRegistry';
 import type {
   CategoryKey,
   CategoryTypeMap,
   CategoryValue,
+  ResolverFunction,
+} from '../_types';
+import TypedRegistry from '../TypedRegistry';
+import type {
   RegisterOptions,
   Registrable,
   RegistrationEntry,
   ResolveOptions,
-  ResolverFunction,
   ResolverType,
 } from '../types';
 

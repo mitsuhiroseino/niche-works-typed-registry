@@ -1,4 +1,5 @@
-import type { ResolveOptions, StoreEntry } from '../../types';
+import type { StoreEntry } from '../../_types';
+import type { ResolveOptions } from '../../types';
 
 /**
  * クラスからインスタンスを生成して返す

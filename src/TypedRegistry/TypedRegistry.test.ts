@@ -103,8 +103,9 @@ describe('TypedRegistry', () => {
     expect(raw).toBe(value);
 
     const result = registry.resolve('CLONE');
-    expect(result).not.toBeInstanceOf(TestClass);
-    expect(result).toEqual({ a: 4, b: 5, c: 6 });
+    expect(result).toBeInstanceOf(TestClass);
+    expect(result).not.toBe(value);
+    expect(result.sum()).toBe(15);
   });
 
   test('factory', () => {

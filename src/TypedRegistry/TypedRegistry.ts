@@ -1,3 +1,4 @@
+import type { ResolverFunction } from '../_types';
 import Resolver from '../Resolver';
 import Store from '../Store';
 import type {
@@ -5,7 +6,6 @@ import type {
   Registrable,
   RegistrationEntry,
   ResolveOptions,
-  ResolverFunction,
   ResolverType,
 } from '../types';
 
@@ -66,16 +66,13 @@ export default class TypedRegistry<CategoryType extends unknown = unknown> {
    * @param entry
    */
   private _register(entry: RegistrationEntry<CategoryType>) {
-    let { type, tags = [], metadata, singleton = false } = entry;
+    let { type, ...rest } = entry;
     if (type == null) {
       type = _detectType(entry.raw);
     }
     this._store.set({
-      ...entry,
+      ...rest,
       type,
-      tags,
-      metadata: { ...metadata },
-      singleton,
     });
   }
 

@@ -1,5 +1,5 @@
-import { clone } from 'remeda';
-import type { StoreEntry } from '../../types';
+import { klona } from 'klona/full';
+import type { StoreEntry } from '../../_types';
 
 /**
  * 値をディープコピーして返す
@@ -7,5 +7,5 @@ import type { StoreEntry } from '../../types';
  * @returns
  */
 export default function resolveAsClone<T>(entry: StoreEntry): T {
-  return clone(entry.raw);
+  return klona(entry.raw);
 }
