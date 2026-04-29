@@ -1,0 +1,10 @@
+import type { StoreEntry } from '../../types';
+
+/**
+ * 値をそのまま返す
+ * @param entry
+ * @returns
+ */
+export default function resolveAsReference<T>(entry: StoreEntry): T {
+  return entry.raw;
+}
