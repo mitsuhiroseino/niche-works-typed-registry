@@ -16,7 +16,7 @@ export default class TypedRegistry<CategoryType extends unknown = unknown> {
   /**
    * カテゴリー
    */
-  readonly category: PropertyKey;
+  readonly category: string;
 
   /**
    * Store
@@ -29,7 +29,7 @@ export default class TypedRegistry<CategoryType extends unknown = unknown> {
   private _resolver: Resolver<CategoryType>;
 
   constructor(
-    category: PropertyKey,
+    category: string,
     store: Store<CategoryType> = new Store(category),
   ) {
     this.category = category;

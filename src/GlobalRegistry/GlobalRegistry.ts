@@ -1,7 +1,7 @@
 import type {
-  CategoryKey,
-  CategoryTypeMap,
-  CategoryValue,
+  RegistryCategory,
+  RegistryTypeMap,
+  RegistryValue,
   ResolverFunction,
 } from '../_types';
 import TypedRegistry from '../TypedRegistry';
@@ -17,21 +17,21 @@ import type {
  * レジストリ管理クラス
  */
 export default class GlobalRegistry<
-  Categories extends CategoryTypeMap = CategoryTypeMap,
+  Registries extends RegistryTypeMap = RegistryTypeMap,
 > {
   /**
    * 登録されているRegistry
    */
   private _registrys = new Map<
-    PropertyKey,
-    TypedRegistry<CategoryValue<Categories>>
+    string,
+    TypedRegistry<RegistryValue<Registries>>
   >();
 
   /**
    * レジストリを登録する
    * @param registry
    */
-  registerRegistry(registry: TypedRegistry<CategoryValue<Categories>>): void {
+  registerRegistry(registry: TypedRegistry<RegistryValue<Registries>>): void {
     this._registrys.set(registry.category, registry);
   }
 
@@ -40,9 +40,11 @@ export default class GlobalRegistry<
    * @param category
    * @returns
    */
-  createRegistry<C extends CategoryKey<Categories>>(category: C) {
-    const registry = new TypedRegistry<CategoryValue<Categories>>(category);
-    this._registrys.set(category, registry);
+  createRegistry<C extends RegistryCategory<Registries>>(category: C) {
+    const registry = new TypedRegistry<RegistryValue<Registries>>(
+      category as string,
+    );
+    this._registrys.set(category as string, registry);
     return registry;
   }
 
@@ -51,8 +53,8 @@ export default class GlobalRegistry<
    * @param category
    * @returns
    */
-  ensureRegistry<C extends CategoryKey<Categories>>(category: C) {
-    let registry = this._registrys.get(category);
+  ensureRegistry<C extends RegistryCategory<Registries>>(category: C) {
+    let registry = this._registrys.get(category as string);
     if (!registry) {
       registry = this.createRegistry(category);
     }
@@ -64,8 +66,8 @@ export default class GlobalRegistry<
    * @param category
    * @returns
    */
-  getRegistry<C extends CategoryKey<Categories>>(category: C) {
-    return this._registrys.get(category);
+  getRegistry<C extends RegistryCategory<Registries>>(category: C) {
+    return this._registrys.get(category as string);
   }
 
   /**
@@ -73,9 +75,9 @@ export default class GlobalRegistry<
    * @param category
    * @param entries
    */
-  registerAll<C extends CategoryKey<Categories>>(
+  registerAll<C extends RegistryCategory<Registries>>(
     category: C,
-    entries: RegistrationEntry<Categories[C]>[],
+    entries: RegistrationEntry<Registries[C]>[],
   ) {
     this.ensureRegistry(category).registerAll(entries);
   }
@@ -87,10 +89,10 @@ export default class GlobalRegistry<
    * @param raw
    * @param options
    */
-  register<C extends CategoryKey<Categories>>(
+  register<C extends RegistryCategory<Registries>>(
     category: C,
     key: string,
-    raw: Registrable<Categories[C]>,
+    raw: Registrable<Registries[C]>,
     options?: RegisterOptions,
   ) {
     this.ensureRegistry(category).register(key, raw, options);
@@ -101,11 +103,11 @@ export default class GlobalRegistry<
    * @param key
    * @returns
    */
-  getRaw<C extends CategoryKey<Categories>>(
+  getRaw<C extends RegistryCategory<Registries>>(
     category: C,
     key: string,
-  ): Registrable<Categories[C]> | undefined {
-    return this.getRegistry(category).getRaw(key) as Registrable<Categories[C]>;
+  ): Registrable<Registries[C]> | undefined {
+    return this.getRegistry(category).getRaw(key) as Registrable<Registries[C]>;
   }
 
   /**
@@ -114,12 +116,12 @@ export default class GlobalRegistry<
    * @param tag
    * @returns
    */
-  getRawByTag<C extends CategoryKey<Categories>>(
+  getRawByTag<C extends RegistryCategory<Registries>>(
     category: C,
     tag: string,
-  ): Registrable<Categories[C]>[] {
+  ): Registrable<Registries[C]>[] {
     return this.getRegistry(category).getRawByTag(tag) as Registrable<
-      Categories[C]
+      Registries[C]
     >[];
   }
 
@@ -130,7 +132,7 @@ export default class GlobalRegistry<
    * @param resolver
    * @returns
    */
-  setResolver<C extends CategoryKey<Categories>>(
+  setResolver<C extends RegistryCategory<Registries>>(
     category: C,
     type: ResolverType,
     resolver: ResolverFunction,
@@ -144,12 +146,12 @@ export default class GlobalRegistry<
    * @param options
    * @returns
    */
-  resolve<C extends CategoryKey<Categories>>(
+  resolve<C extends RegistryCategory<Registries>>(
     category: C,
     key: string,
     options?: ResolveOptions,
-  ): Categories[C] | undefined {
-    return this.getRegistry(category).resolve(key, options) as Categories[C];
+  ): Registries[C] | undefined {
+    return this.getRegistry(category).resolve(key, options) as Registries[C];
   }
 
   /**
@@ -159,14 +161,14 @@ export default class GlobalRegistry<
    * @param options
    * @returns
    */
-  resolveByTag<C extends CategoryKey<Categories>>(
+  resolveByTag<C extends RegistryCategory<Registries>>(
     category: C,
     tag: string,
     options?: ResolveOptions,
-  ): Categories[C][] {
+  ): Registries[C][] {
     return this.getRegistry(category).resolveByTag(
       tag,
       options,
-    ) as Categories[C][];
+    ) as Registries[C][];
   }
 }

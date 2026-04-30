@@ -7,7 +7,7 @@ export default class Store<CategoryType extends unknown = unknown> {
   /**
    * カテゴリー
    */
-  readonly category: PropertyKey;
+  readonly category: string;
 
   /**
    * エントリー
@@ -18,7 +18,7 @@ export default class Store<CategoryType extends unknown = unknown> {
    * コンストラクター
    * @param category カテゴリー
    */
-  constructor(category: PropertyKey) {
+  constructor(category: string) {
     this.category = category;
   }
 

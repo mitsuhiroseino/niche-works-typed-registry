@@ -10,7 +10,7 @@ export default class Resolver<CategoryType extends unknown = unknown> {
   /**
    * カテゴリー
    */
-  readonly category: PropertyKey;
+  readonly category: string;
 
   /**
    * Store
@@ -22,7 +22,7 @@ export default class Resolver<CategoryType extends unknown = unknown> {
    */
   private _resolvers = new Map<ResolverType, ResolverFunction>(resolvers);
 
-  constructor(category: PropertyKey, store: Store<CategoryType>) {
+  constructor(category: string, store: Store<CategoryType>) {
     this.category = category;
     this._store = store;
   }

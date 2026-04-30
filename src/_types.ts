@@ -2,21 +2,22 @@ import type { SetRequired } from 'type-fest';
 import type { RegistrationEntry, ResolveOptions } from './types';
 
 /**
- * カテゴリー毎の型定義
+ * レジストリー毎の型定義
  */
-export type CategoryTypeMap = Record<string, unknown>;
+export type RegistryTypeMap = Record<string, unknown>;
 
 /**
- * カテゴリー毎の型定義から取得可能なカテゴリーのキー
+ * レジストリー毎の型定義から取得可能なレジストリーのカテゴリー
  */
-export type CategoryKey<Categories extends CategoryTypeMap> = keyof Categories;
+export type RegistryCategory<Registries extends RegistryTypeMap> =
+  keyof Registries;
 
 /**
- * カテゴリー毎の型定義から取得可能なカテゴリーの値
+ * レジストリー毎の型定義から取得可能なレジストリーの値
  */
-export type CategoryValue<
-  Categories extends CategoryTypeMap = CategoryTypeMap,
-> = Categories[keyof Categories];
+export type RegistryValue<
+  Registries extends RegistryTypeMap = RegistryTypeMap,
+> = Registries[keyof Registries];
 
 /**
  * 保存されたエントリー
