@@ -1,5 +1,6 @@
 import createExternalOptionFunction from '@niche-works/dev/createExternalOptionFunction';
 import distPackage from '@niche-works/rollup-plugin-dist-package';
+import copy from 'rollup-plugin-copy';
 import { defineConfig } from 'tsdown';
 
 export default defineConfig({
@@ -42,6 +43,14 @@ export default defineConfig({
           },
         },
       },
+    }),
+    copy({
+      targets: [
+        {
+          src: ['LICENSE', 'README.md', 'README.ja.md'],
+          dest: 'dist',
+        },
+      ],
     }),
   ],
 });
