@@ -1,48 +1,26 @@
-import type { ResolverFunction } from '../_types';
-import Store from '../Store';
-import type { ResolveOptions, ResolverType } from '../types';
+import type { ResolverFunction, ResolverType, StoreEntry } from '../_types';
+import type { ResolveOptions } from '../types';
 import resolvers from './resolvers';
 
 /**
- * 戻り値を解決するためのクラス
+ * エントリーから戻り値を解決するためのクラス
  */
-export default class Resolver<CategoryType extends unknown = unknown> {
-  /**
-   * カテゴリー
-   */
-  readonly category: string;
-
-  /**
-   * Store
-   */
-  private _store: Store<CategoryType>;
-
+export default class Resolver {
   /**
    * 登録情報の解決関数
    */
-  private _resolvers = new Map<ResolverType, ResolverFunction>(resolvers);
-
-  constructor(category: string, store: Store<CategoryType>) {
-    this.category = category;
-    this._store = store;
-  }
-
-  setResolver(type: ResolverType, resolver: ResolverFunction) {
-    this._resolvers.set(type, resolver);
-  }
+  private _resolvers: ReadonlyMap<ResolverType, ResolverFunction> = new Map(
+    resolvers,
+  );
 
   /**
    * エントリーを解決する
-   * @param key
+   * @param entry
    * @param options
    * @returns
    */
-  resolve(key: string, options: ResolveOptions = {}): CategoryType | undefined {
-    const entry = this._store.get(key);
-    if (!entry) {
-      return;
-    }
-    if (entry.singleton && entry.value !== undefined) {
+  resolve(entry: StoreEntry, options: ResolveOptions = {}): unknown {
+    if (entry.singleton && 'value' in entry) {
       return entry.value;
     }
 
@@ -56,11 +34,5 @@ export default class Resolver<CategoryType extends unknown = unknown> {
     } else {
       throw new Error(`No resolver found for type "${entry.type}"`);
     }
-  }
-
-  resolveByTag(tag: string, options: ResolveOptions = {}): CategoryType[] {
-    return this._store
-      .getByTag(tag)
-      .map((entry) => this.resolve(entry.key, options));
   }
 }

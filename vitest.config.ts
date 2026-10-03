@@ -4,5 +4,6 @@ export default defineConfig({
   test: {
     globals: true,
     coverage: { enabled: true },
+    typecheck: { enabled: true },
   },
 });

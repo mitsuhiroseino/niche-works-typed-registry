@@ -6,6 +6,6 @@ import type { StoreEntry } from '../../_types';
  * @param entry
  * @returns
  */
-export default function resolveAsClone<T>(entry: StoreEntry): T {
+export default function resolveAsClone(entry: StoreEntry): unknown {
   return klona(entry.raw);
 }

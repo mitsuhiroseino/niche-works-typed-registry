@@ -36,7 +36,6 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strictNullChecks": false,
     "strictPropertyInitialization": false,
     "preserveSymlinks": false
   },

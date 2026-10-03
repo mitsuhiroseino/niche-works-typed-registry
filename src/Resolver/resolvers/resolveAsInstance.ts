@@ -7,10 +7,10 @@ import type { ResolveOptions } from '../../types';
  * @param options
  * @returns
  */
-export default function resolveAsInstance<T>(
+export default function resolveAsInstance(
   entry: StoreEntry,
   options: ResolveOptions,
-): T {
+): unknown {
   const args = options.args || [];
-  return new (entry.raw as any)(...args);
+  return new (entry.raw as new (...args: unknown[]) => unknown)(...args);
 }

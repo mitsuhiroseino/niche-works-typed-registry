@@ -5,6 +5,6 @@ import type { StoreEntry } from '../../_types';
  * @param entry
  * @returns
  */
-export default function resolveAsReference<T>(entry: StoreEntry): T {
+export default function resolveAsReference(entry: StoreEntry): unknown {
   return entry.raw;
 }

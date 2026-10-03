@@ -7,6 +7,7 @@ export default defineConfig({
   entry: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.test.{ts,tsx}',
+    '!src/**/*.test-d.{ts,tsx}',
     '!src/**/*.d.{ts,tsx}',
   ],
   format: ['esm', 'cjs'],
@@ -33,9 +34,9 @@ export default defineConfig({
             import: './index.mjs',
             require: './index.cjs',
           },
-          './GlobalRegistry': {
-            import: './GlobalRegistry/index.mjs',
-            require: './GlobalRegistry/index.cjs',
+          './TypedRegistry': {
+            import: './TypedRegistry/index.mjs',
+            require: './TypedRegistry/index.cjs',
           },
           './types': {
             import: './types.mjs',

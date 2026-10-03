@@ -1,20 +1,19 @@
 {
   "name": "@niche-works/typed-registry",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "private": true,
   "keywords": [
     "registry"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/mitsuhiroseino/niche-works-typed-registry.git"
+    "url": "git+https://github.com/mitsuhiroseino/niche-works-typed-registry.git"
   },
   "license": "MIT",
   "author": "Mitsuhiro Seino",
   "exports": {
     ".": "./src/index.ts",
-    "./*": "./src/*/index.ts",
-    "./GlobalRegistry": "./src/GlobalRegistry/index.ts",
+    "./TypedRegistry": "./src/TypedRegistry/index.ts",
     "./types": "./src/types.ts"
   },
   "main": "./src/index.ts",
@@ -33,7 +32,7 @@
     "type-fest": "^5.6.0"
   },
   "devDependencies": {
-    "@niche-works/dev": "^0.5.4",
+    "@niche-works/dev": "^0.5.5",
     "@niche-works/rollup-plugin-dist-package": "^0.2.2",
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^4.1.8",

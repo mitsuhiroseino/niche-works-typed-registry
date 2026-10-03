@@ -1,177 +1,289 @@
+import type { ResolveSpec } from '../types';
 import TypedRegistry from './TypedRegistry';
 
-class TestClass {
-  private a;
-  private b;
-  private c;
-  constructor(a = 1, b = 1, c = 1) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
-  }
-  sum() {
-    return this.a + this.b + this.c;
+interface Validator {
+  validate(value: unknown): boolean;
+}
+
+class Required implements Validator {
+  validate(value: unknown) {
+    return value != null && value !== '';
   }
 }
-const VALUE = 123;
-const OBJ = { a: 1, b: { b1: 11, b2: 12 }, c: [1, 2, 3] };
-const FN = (a, b, c) => a + b + c;
-const FACTORY = (...args) => new TestClass(...args);
+
+class MaxLength implements Validator {
+  max: number;
+  constructor(max: number) {
+    this.max = max;
+  }
+  validate(value: unknown) {
+    return String(value).length <= this.max;
+  }
+}
+
+class Counter implements Validator {
+  #count = 0;
+  count() {
+    return ++this.#count;
+  }
+  validate() {
+    return true;
+  }
+}
 
 describe('TypedRegistry', () => {
-  describe('reference (default)', () => {
-    test('value', () => {
-      const registry = new TypedRegistry<typeof VALUE>('test');
-      registry.register('PRIMITIVE', VALUE);
+  describe('登録内容', () => {
+    test('クラスを渡すとインスタンスを返す', () => {
+      const registry = new TypedRegistry({ required: Required });
 
-      const raw = registry.getRaw('PRIMITIVE');
-      expect(raw).toBe(VALUE);
-
-      const result = registry.resolve('PRIMITIVE');
-      expect(result).toBe(VALUE);
+      expect(registry.getRaw('required')).toBe(Required);
+      const result = registry.resolve('required');
+      expect(result).toBeInstanceOf(Required);
+      expect(result).not.toBe(registry.resolve('required'));
     });
 
-    test('object', () => {
-      const registry = new TypedRegistry<typeof OBJ>('test');
-      registry.register('OBJECT', OBJ);
+    test('{ class }: args をコンストラクターに渡す', () => {
+      const registry = new TypedRegistry({ maxLength: { class: MaxLength } });
 
-      const raw = registry.getRaw('OBJECT');
-      expect(raw).toBe(OBJ);
-
-      const result = registry.resolve('OBJECT');
-      expect(result).not.toBe(OBJ);
-      expect(result).toEqual(OBJ);
+      expect(registry.getRaw('maxLength')).toBe(MaxLength);
+      const result = registry.resolve('maxLength', { args: [3] });
+      expect(result.max).toBe(3);
+      expect(result.validate('abcd')).toBe(false);
     });
 
-    test('function', () => {
-      const registry = new TypedRegistry<typeof FN>('test');
-      registry.register('FUNCTION', FN);
+    test('ES5 形式のクラス（function）も登録できる', () => {
+      function Legacy(this: Validator) {
+        this.validate = () => true;
+      }
+      const registry = new TypedRegistry({
+        legacy: Legacy as unknown as new () => Validator,
+      });
 
-      const raw = registry.getRaw('FUNCTION');
-      expect(raw).toBe(FN);
+      const result = registry.resolve('legacy');
+      expect(result).toBeInstanceOf(Legacy);
+      expect(result.validate(1)).toBe(true);
+    });
 
-      const result = registry.resolve('FUNCTION');
-      expect(result).toBe(FN);
+    test('{ factory }: 関数の戻り値を返す', () => {
+      const factory = (re: RegExp): Validator => ({
+        validate: (value) => re.test(String(value)),
+      });
+      const registry = new TypedRegistry({ pattern: { factory } });
+
+      expect(registry.getRaw('pattern')).toBe(factory);
+      const result = registry.resolve('pattern', { args: [/^\d+$/] });
+      expect(result.validate('123')).toBe(true);
+      expect(result.validate('abc')).toBe(false);
+    });
+
+    test('{ value }: 値をそのまま返す', () => {
+      const counter = new Counter();
+      const registry = new TypedRegistry({ counter: { value: counter } });
+
+      expect(registry.getRaw('counter')).toBe(counter);
+      const result = registry.resolve('counter');
+      expect(result).toBe(counter);
+      // #private フィールドを持つインスタンスも使える
+      expect(result.count()).toBe(1);
+    });
+
+    test('{ value }: 関数も値として登録できる', () => {
+      const fn = (value: unknown) => value != null;
+      const registry = new TypedRegistry({ fn: { value: fn } });
+
+      expect(registry.resolve('fn')).toBe(fn);
+    });
+
+    test('{ value, clone: true }: 値のディープコピーを返す', () => {
+      const config = { validate: () => true, options: { max: 3 } };
+      const registry = new TypedRegistry({
+        config: { value: config, clone: true },
+      });
+
+      const result = registry.resolve('config');
+      expect(result).not.toBe(config);
+      expect(result.options).not.toBe(config.options);
+      expect(result.options).toEqual(config.options);
+    });
+
+    test('singleton: 初回に生成したものを返し続ける', () => {
+      const registry = new TypedRegistry({
+        maxLength: { class: MaxLength, singleton: true },
+        short: { factory: () => new MaxLength(5), singleton: true },
+      });
+
+      const result1 = registry.resolve('maxLength', { args: [1] });
+      const result2 = registry.resolve('maxLength', { args: [2] });
+      expect(result2).toBe(result1);
+      expect(result2.max).toBe(1);
+      expect(registry.resolve('short')).toBe(registry.resolve('short'));
+    });
+
+    test('不正な登録内容は例外を投げる', () => {
+      expect(
+        () =>
+          new TypedRegistry({ bad: {} } as unknown as { bad: typeof Required }),
+      ).toThrow(
+        'Invalid entry for key "bad". Use a class, { class }, { factory } or { value }',
+      );
+    });
+
+    test('空の登録内容を渡すと空のレジストリーになる', () => {
+      const registry = new TypedRegistry({});
+      expect(registry.keys()).toEqual([]);
     });
   });
 
-  describe('instance (default)', () => {
-    test('class', () => {
-      const registry = new TypedRegistry<TestClass>('test');
-      registry.register('CLASS', TestClass);
-
-      const raw = registry.getRaw('CLASS');
-      expect(raw).toBe(TestClass);
-
-      const result = registry.resolve('CLASS', { args: [1, 2, 3] });
-      expect(result).toBeInstanceOf(TestClass);
-      expect(result?.sum()).toBe(6);
+  describe('id', () => {
+    test('options で指定した ID を返す', () => {
+      const registry = new TypedRegistry({}, { id: 'validators' });
+      expect(registry.id).toBe('validators');
     });
   });
 
-  test('instance', () => {
-    const registry = new TypedRegistry<TestClass>('test');
-    registry.register('CLASS', TestClass, { type: 'instance' });
+  describe('has / keys', () => {
+    test('登録の有無と全てのキーを返す', () => {
+      const registry = new TypedRegistry({
+        required: Required,
+        short: { factory: () => new MaxLength(5) },
+      });
 
-    const raw = registry.getRaw('CLASS');
-    expect(raw).toBe(TestClass);
-
-    const result = registry.resolve('CLASS', { args: [1, 2, 3] });
-    expect(result).toBeInstanceOf(TestClass);
-    expect(result?.sum()).toBe(6);
+      expect(registry.has('required')).toBe(true);
+      expect(registry.has('unknown')).toBe(false);
+      expect(registry.keys()).toEqual(['required', 'short']);
+    });
   });
 
-  test('reference', () => {
-    const registry = new TypedRegistry<TestClass>('test');
-    const value = new TestClass(4, 5, 6);
-    registry.register('REFERENCE', value, { type: 'reference' });
+  describe('resolveSpec', () => {
+    const registry = new TypedRegistry({
+      required: Required,
+      maxLength: MaxLength,
+    });
 
-    const raw = registry.getRaw('REFERENCE');
-    expect(raw).toBe(value);
+    test('キーと引数の組で取得する', () => {
+      expect(registry.resolveSpec({ key: 'required' })).toBeInstanceOf(
+        Required,
+      );
+      expect(registry.resolveSpec({ key: 'maxLength', args: [3] }).max).toBe(3);
+    });
 
-    const result = registry.resolve('REFERENCE');
-    expect(result).toBe(value);
-    expect(result.sum()).toBe(15);
+    test('設定から組み立てた組の配列を纏めて解決できる', () => {
+      const specs: ResolveSpec<{
+        required: typeof Required;
+        maxLength: typeof MaxLength;
+      }>[] = [{ key: 'required' }, { key: 'maxLength', args: [3] }];
+
+      const results = specs.map((spec) => registry.resolveSpec(spec));
+      expect(results.map((v) => v.validate('abcd'))).toEqual([true, false]);
+    });
   });
 
-  test('clone', () => {
-    const registry = new TypedRegistry<TestClass>('test');
-    const value = new TestClass(4, 5, 6);
-    registry.register('CLONE', value, { type: 'clone' });
+  describe('未登録のキー', () => {
+    const registry = new TypedRegistry({ required: Required });
+    const message = 'No entry registered for key "unknown"';
 
-    const raw = registry.getRaw('CLONE');
-    expect(raw).toBe(value);
+    test('resolve / resolveSpec / getRaw は例外を投げる', () => {
+      expect(() => registry.resolve('unknown' as 'required')).toThrow(message);
+      expect(() =>
+        registry.resolveSpec({ key: 'unknown' as 'required' }),
+      ).toThrow(message);
+      expect(() => registry.getRaw('unknown' as 'required')).toThrow(message);
+    });
 
-    const result = registry.resolve('CLONE');
-    expect(result).toBeInstanceOf(TestClass);
-    expect(result).not.toBe(value);
-    expect(result.sum()).toBe(15);
+    test('例外のメッセージに ID を含める', () => {
+      const registry = new TypedRegistry({}, { id: 'validators' });
+      expect(() => registry.getRaw('unknown' as never)).toThrow(
+        `${message} in registry "validators"`,
+      );
+    });
   });
 
-  test('factory', () => {
-    const registry = new TypedRegistry<TestClass>('test');
-    registry.register('FACTORY', FACTORY, { type: 'factory' });
+  describe('tags', () => {
+    const registry = new TypedRegistry({
+      required: { class: Required, tags: ['basic'] },
+      maxLength: { class: MaxLength, tags: ['basic', 'length'] },
+      short: { factory: () => new MaxLength(5), tags: ['length'] },
+      counter: { value: new Counter() },
+    });
 
-    const raw = registry.getRaw('FACTORY');
-    expect(raw).toBe(FACTORY);
+    test('getRawByTag: タグを持つものをそのまま返す', () => {
+      expect(registry.getRawByTag('basic')).toEqual([Required, MaxLength]);
+      expect(registry.getRawByTag('none')).toEqual([]);
+    });
 
-    const result = registry.resolve('FACTORY', { args: [1, 2, 3] });
-    expect(result).toBeInstanceOf(TestClass);
-    expect(result.sum()).toBe(6);
+    test('resolveByTag: タグを持つものを纏めて解決する', () => {
+      const result = registry.resolveByTag('length', { args: [2] });
+      expect(result).toHaveLength(2);
+      expect((result[0] as MaxLength).max).toBe(2);
+      expect((result[1] as MaxLength).max).toBe(5);
+    });
   });
 
-  test('singleton', () => {
-    const registry = new TypedRegistry<TestClass>('test');
-    registry.register('SINGLETON', TestClass, { singleton: true });
+  describe('extend', () => {
+    const createParent = () =>
+      new TypedRegistry({
+        required: { class: Required, tags: ['basic'] },
+        maxLength: { class: MaxLength, tags: ['basic'] },
+      });
 
-    const raw = registry.getRaw('SINGLETON');
-    expect(raw).toBe(TestClass);
+    test('親の登録内容を引き継ぎ、渡した登録内容を追加する', () => {
+      const parent = createParent();
+      const child = parent.extend({
+        short: { factory: () => new MaxLength(5) },
+      });
 
-    const result1 = registry.resolve('SINGLETON');
-    expect(result1).toBeInstanceOf(TestClass);
-    expect(result1?.sum()).toBe(3);
-    const result2 = registry.resolve('SINGLETON');
-    expect(result2).toBe(result1);
-  });
+      expect(child.resolve('required')).toBeInstanceOf(Required);
+      expect(child.resolve('short').max).toBe(5);
+      expect(child.keys()).toEqual(['required', 'maxLength', 'short']);
+      expect(parent.has('short')).toBe(false);
+    });
 
-  test('null', () => {
-    const registry = new TypedRegistry('test');
-    registry.register('NULL', null);
+    test('親と同じキーは子の中でのみ差し替わる', () => {
+      const parent = createParent();
+      class MyRequired extends Required {}
+      const child = parent.extend({ required: MyRequired });
 
-    const raw = registry.getRaw('NULL');
-    expect(raw).toBe(null);
+      expect(child.resolve('required')).toBeInstanceOf(MyRequired);
+      expect(parent.resolve('required')).not.toBeInstanceOf(MyRequired);
+      // 差し替えたものはキーの順序を保つ
+      expect(child.keys()).toEqual(['required', 'maxLength']);
+    });
 
-    const result = registry.resolve('NULL');
-    expect(result).toBe(null);
-  });
+    test('孫レジストリーは親と祖父母の登録内容を引き継ぐ', () => {
+      const grandchild = createParent()
+        .extend({ short: { factory: () => new MaxLength(5) } })
+        .extend({ counter: { value: new Counter() } });
 
-  test('registerAll', () => {
-    const registry = new TypedRegistry('test');
-    registry.registerAll([
-      { key: 'PRIMITIVE', raw: VALUE, tags: ['a'] },
-      { key: 'OBJECT', raw: OBJ, tags: ['b'] },
-      { key: 'FUNCTION', raw: FN, tags: ['a'], type: 'factory' },
-      { key: 'CLASS', raw: TestClass, tags: ['b'] },
-      { key: 'NULL', raw: null, tags: ['a'] },
-    ]);
+      expect(grandchild.keys()).toEqual([
+        'required',
+        'maxLength',
+        'short',
+        'counter',
+      ]);
+    });
 
-    const raws = registry.getRawByTag('b');
-    expect(raws[0]).toBe(OBJ);
-    expect(raws[1]).toBe(TestClass);
+    test('親で singleton として登録したものは親子で共有する', () => {
+      const parent = new TypedRegistry({
+        short: { factory: () => new MaxLength(5), singleton: true },
+      });
+      const child = parent.extend({});
 
-    const result = registry.resolveByTag('a', { args: [1, 2, 3] });
-    expect(result[0]).toBe(VALUE);
-    expect(result[1]).toBe(6);
-    expect(result[2]).toBe(null);
-  });
+      expect(child.resolve('short')).toBe(parent.resolve('short'));
+    });
 
-  test('no entry', () => {
-    const registry = new TypedRegistry('test');
+    test('resolveByTag は親と子のものを纏めて解決する', () => {
+      const parent = createParent();
+      const child = parent.extend({
+        short: { factory: () => new MaxLength(5), tags: ['basic'] },
+      });
 
-    const raw = registry.getRaw('NOENTRY');
-    expect(raw).toBeUndefined();
+      expect(child.resolveByTag('basic', { args: [1] })).toHaveLength(3);
+      expect(parent.resolveByTag('basic', { args: [1] })).toHaveLength(2);
+    });
 
-    const result = registry.resolve('NOENTRY');
-    expect(result).toBeUndefined();
+    test('options を指定できる', () => {
+      const child = createParent().extend({}, { id: 'child' });
+      expect(child.id).toBe('child');
+    });
   });
 });

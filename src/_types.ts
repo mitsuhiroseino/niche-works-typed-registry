@@ -1,38 +1,54 @@
-import type { SetRequired } from 'type-fest';
-import type { RegistrationEntry, ResolveOptions } from './types';
+import type { ResolveOptions } from './types';
 
 /**
- * レジストリー毎の型定義
+ * リゾルバー種別
+ *
+ * - instance: クラスからインスタンスを生成し返す
+ * - factory: 関数の戻り値を返す
+ * - reference: 値をそのまま返す
+ * - clone: 値のコピーを返す
  */
-export type RegistryTypeMap = Record<string, unknown>;
-
-/**
- * レジストリー毎の型定義から取得可能なレジストリーのカテゴリー
- */
-export type RegistryCategory<Registries extends RegistryTypeMap> =
-  keyof Registries;
-
-/**
- * レジストリー毎の型定義から取得可能なレジストリーの値
- */
-export type RegistryValue<
-  Registries extends RegistryTypeMap = RegistryTypeMap,
-> = Registries[keyof Registries];
+export type ResolverType = 'instance' | 'factory' | 'reference' | 'clone';
 
 /**
  * 保存されたエントリー
  */
-export type StoreEntry<T = any> = SetRequired<RegistrationEntry<T>, 'type'> & {
+export type StoreEntry = {
+  /**
+   * キー
+   */
+  key: string;
+
+  /**
+   * 登録した要素
+   */
+  raw: unknown;
+
+  /**
+   * 種別
+   */
+  type: ResolverType;
+
+  /**
+   * タグ
+   */
+  tags: string[];
+
+  /**
+   * シングルトン
+   */
+  singleton?: boolean;
+
   /**
    * シングルトン用の値
    */
-  value?: T;
+  value?: unknown;
 };
 
 /**
  * 値の解決関数
  */
-export type ResolverFunction<T = any> = (
-  entry: StoreEntry<T>,
+export type ResolverFunction = (
+  entry: StoreEntry,
   options: ResolveOptions,
-) => T;
+) => unknown;

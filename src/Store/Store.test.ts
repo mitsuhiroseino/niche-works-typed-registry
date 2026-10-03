@@ -1,40 +1,30 @@
+import type { SetOptional } from 'type-fest';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { StoreEntry } from '../_types';
-import type { Registrable, ResolverType } from '../types';
+import type { ResolverType, StoreEntry } from '../_types';
 import Store from './Store';
 
 // テスト用のダミー値
-const mockRaw = {} as Registrable<string>;
-const mockType = 'someResolverType' as ResolverType;
+const mockRaw = {};
+const mockType: ResolverType = 'reference';
 
 const makeEntry = (
-  overrides: Partial<StoreEntry<string>> & { key: string },
-): StoreEntry<string> => ({
+  overrides: Partial<StoreEntry> & { key: string },
+): SetOptional<StoreEntry, 'tags'> => ({
   raw: mockRaw,
   type: mockType,
   ...overrides,
 });
 
 describe('Store', () => {
-  let store: Store<string>;
+  let store: Store;
 
   beforeEach(() => {
-    store = new Store<string>('testCategory');
+    store = new Store();
   });
 
   // --- constructor ---
 
   describe('constructor', () => {
-    it('categoryが正しく設定される', () => {
-      expect(store.category).toBe('testCategory');
-    });
-
-    it('Symbolをcategoryとして受け取れる', () => {
-      const sym = Symbol('sym');
-      const s = new Store(sym);
-      expect(s.category).toBe(sym);
-    });
-
     it('初期状態でエントリーが空である', () => {
       expect(store.getEntries()).toHaveLength(0);
     });
