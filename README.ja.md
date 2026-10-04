@@ -1,6 +1,6 @@
-# @niche-works/typed-registry
+# @fringeworks/typed-registry
 
-`@niche-works/typed-registry` は 同じインターフェイスを持つクラスを型安全なレジストリーで纏めて管理するためのニッチなライブラリです。
+`@fringeworks/typed-registry` は 同じインターフェイスを持つクラスを型安全なレジストリーで纏めて管理するためのニッチなライブラリです。
 ライブラリの作成者が実装をキーで提供すれば、ライブラリの利用者は個々のクラスを知らなくてもキーで利用でき、さらに子レジストリーに独自の実装を追加することもできます。
 
 **[English README is available here](./README.md)**
@@ -16,7 +16,7 @@
 ## インストール
 
 ```sh
-npm install @niche-works/typed-registry
+npm install @fringeworks/typed-registry
 ```
 
 ## 使い方
@@ -28,7 +28,7 @@ npm install @niche-works/typed-registry
 コンストラクターに登録内容を渡します。
 
 ```ts
-import { TypedRegistry } from '@niche-works/typed-registry';
+import { TypedRegistry } from '@fringeworks/typed-registry';
 
 export const validators = new TypedRegistry({
   required: Required,
@@ -64,12 +64,12 @@ myValidators.resolve('required'); // Required（親から引き継ぐ）
 
 登録内容の1件は以下のいずれかです。
 
-| 登録内容                            | `resolve` が返すもの                            |
-| ----------------------------------- | ----------------------------------------------- |
-| `SomeClass`                         | 新しいインスタンス（`args` → コンストラクター） |
-| `{ class: SomeClass, ...options }`  | 同上（オプションを指定する場合）                |
-| `{ factory: fn, ...options }`       | 関数の戻り値（`args` → 関数）                   |
-| `{ value: v, ...options }`          | 値そのもの（またはディープコピー）              |
+| 登録内容                           | `resolve` が返すもの                            |
+| ---------------------------------- | ----------------------------------------------- |
+| `SomeClass`                        | 新しいインスタンス（`args` → コンストラクター） |
+| `{ class: SomeClass, ...options }` | 同上（オプションを指定する場合）                |
+| `{ factory: fn, ...options }`      | 関数の戻り値（`args` → 関数）                   |
+| `{ value: v, ...options }`         | 値そのもの（またはディープコピー）              |
 
 ```ts
 const validators = new TypedRegistry({
@@ -115,7 +115,10 @@ validators.resolve('pattern', { args: [/^\d+$/] }); // Pattern
 登録内容はデフォルトでは制約されません。組み込みの登録内容が全て共通のインターフェイスを満たすことを確認したい場合は `satisfies RegistryEntries<Base>` を使います。
 
 ```ts
-import { TypedRegistry, type RegistryEntries } from '@niche-works/typed-registry';
+import {
+  TypedRegistry,
+  type RegistryEntries,
+} from '@fringeworks/typed-registry';
 
 export const validators = new TypedRegistry({
   required: Required,
@@ -134,7 +137,7 @@ import type {
   RegistryEntries,
   ResolveSpec,
   TypedRegistry,
-} from '@niche-works/typed-registry';
+} from '@fringeworks/typed-registry';
 
 export type Schema<E> = Record<string, ResolveSpec<E>[]>;
 
@@ -170,7 +173,9 @@ JSON 等の型の無い設定は、`has` でキーを確認してから型を与
 
 ```ts
 if (validators.has(json.key)) {
-  validators.resolveSpec(json as ResolveSpec<RegistryEntriesOf<typeof validators>>);
+  validators.resolveSpec(
+    json as ResolveSpec<RegistryEntriesOf<typeof validators>>,
+  );
 }
 ```
 
@@ -197,38 +202,38 @@ const validators = new TypedRegistry({ ...required, ...maxLength });
 
 `new TypedRegistry(entries, options?)`
 
-| オプション | 型       | 説明                                           |
-| ---------- | -------- | ---------------------------------------------- |
+| オプション | 型       | 説明                                          |
+| ---------- | -------- | --------------------------------------------- |
 | `id`       | `string` | レジストリーの ID。例外のメッセージに含まれる |
 
 ### メンバー
 
-| メンバー                      | 説明                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `resolve(key, options?)`      | キーに対応するインスタンス・値を返す。登録されていないキーの場合は例外を投げる             |
-| `resolveSpec({ key, args })`  | キーと `args` を組で渡す `resolve`                                                         |
+| メンバー                      | 説明                                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `resolve(key, options?)`      | キーに対応するインスタンス・値を返す。登録されていないキーの場合は例外を投げる           |
+| `resolveSpec({ key, args })`  | キーと `args` を組で渡す `resolve`                                                       |
 | `resolveByTag(tag, options?)` | タグを持つ全てのエントリーのインスタンス・値を返す。全てのエントリーに同じ `args` を渡す |
-| `has(key)`                    | キーが登録されているかを返す                                                               |
-| `keys()`                      | 登録されている全てのキーを返す                                                             |
-| `getRaw(key)`                 | 登録したクラス・関数・値をそのまま返す。登録されていないキーの場合は例外を投げる           |
-| `getRawByTag(tag)`            | タグを持つ登録したクラス・関数・値をそのまま返す                                           |
-| `extend(entries, options?)`   | 登録内容を追加した子レジストリーを作成する                                                 |
-| `id`                          | レジストリーの ID                                                                          |
+| `has(key)`                    | キーが登録されているかを返す                                                             |
+| `keys()`                      | 登録されている全てのキーを返す                                                           |
+| `getRaw(key)`                 | 登録したクラス・関数・値をそのまま返す。登録されていないキーの場合は例外を投げる         |
+| `getRawByTag(tag)`            | タグを持つ登録したクラス・関数・値をそのまま返す                                         |
+| `extend(entries, options?)`   | 登録内容を追加した子レジストリーを作成する                                               |
+| `id`                          | レジストリーの ID                                                                        |
 
 ## 型
 
-| 型                       | 説明                                                                      |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `TypedRegistry<E, Base>` | レジストリー。`Base` を指定すると取得したものを `Base` として扱える       |
-| `RegistryEntries<Base>`  | 登録内容。`E` の制約や、`satisfies` での確認に使う                        |
-| `RegistryEntriesOf<R>`   | レジストリーの登録内容                                                    |
-| `ResolveSpec<E>`         | キー毎の `{ key, args }` の組の union                                     |
-| `RegistryKey<E>`         | キー                                                                      |
-| `ResolveArgs<E, K>`      | キーに対応する `args`                                                     |
-| `Resolved<Base, E, K>`   | キーに対応する `resolve` の戻り値                                         |
-| `RegistryRaw<E, K>`      | キーに対応する、登録したクラス・関数・値                                  |
-| `RegistryValue<E>`       | 取得される全てのものの union                                              |
-| `TypedRegistryOptions`   | コンストラクターと `extend` のオプション                                  |
+| 型                       | 説明                                                                |
+| ------------------------ | ------------------------------------------------------------------- |
+| `TypedRegistry<E, Base>` | レジストリー。`Base` を指定すると取得したものを `Base` として扱える |
+| `RegistryEntries<Base>`  | 登録内容。`E` の制約や、`satisfies` での確認に使う                  |
+| `RegistryEntriesOf<R>`   | レジストリーの登録内容                                              |
+| `ResolveSpec<E>`         | キー毎の `{ key, args }` の組の union                               |
+| `RegistryKey<E>`         | キー                                                                |
+| `ResolveArgs<E, K>`      | キーに対応する `args`                                               |
+| `Resolved<Base, E, K>`   | キーに対応する `resolve` の戻り値                                   |
+| `RegistryRaw<E, K>`      | キーに対応する、登録したクラス・関数・値                            |
+| `RegistryValue<E>`       | 取得される全てのものの union                                        |
+| `TypedRegistryOptions`   | コンストラクターと `extend` のオプション                            |
 
 ## ライセンス
 

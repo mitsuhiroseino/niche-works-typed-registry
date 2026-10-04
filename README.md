@@ -1,6 +1,6 @@
-# @niche-works/typed-registry
+# @fringeworks/typed-registry
 
-`@niche-works/typed-registry` is a niche library for managing classes that share the same interface in a type-safe registry.
+`@fringeworks/typed-registry` is a niche library for managing classes that share the same interface in a type-safe registry.
 Library authors provide their implementations under keys, and library users can use them by key without knowing the individual classes — and can add their own implementations in a child registry.
 
 **[日本語のREADMEはこちら](./README.ja.md)**
@@ -16,7 +16,7 @@ Library authors provide their implementations under keys, and library users can 
 ## Installation
 
 ```sh
-npm install @niche-works/typed-registry
+npm install @fringeworks/typed-registry
 ```
 
 ## Usage
@@ -28,7 +28,7 @@ The examples below use a validation library as an example.
 Pass the entries to the constructor.
 
 ```ts
-import { TypedRegistry } from '@niche-works/typed-registry';
+import { TypedRegistry } from '@fringeworks/typed-registry';
 
 export const validators = new TypedRegistry({
   required: Required,
@@ -64,12 +64,12 @@ myValidators.resolve('required'); // Required (inherited from the parent)
 
 Each entry is one of the following.
 
-| Entry                             | `resolve` returns                        |
-| --------------------------------- | ---------------------------------------- |
-| `SomeClass`                       | A new instance (`args` → constructor)    |
+| Entry                              | `resolve` returns                        |
+| ---------------------------------- | ---------------------------------------- |
+| `SomeClass`                        | A new instance (`args` → constructor)    |
 | `{ class: SomeClass, ...options }` | Same as above, with options              |
-| `{ factory: fn, ...options }`     | The return value (`args` → the function) |
-| `{ value: v, ...options }`        | The value itself (or a deep copy)        |
+| `{ factory: fn, ...options }`      | The return value (`args` → the function) |
+| `{ value: v, ...options }`         | The value itself (or a deep copy)        |
 
 ```ts
 const validators = new TypedRegistry({
@@ -115,7 +115,10 @@ The parameters of a factory function need type annotations, since there is nothi
 Entries are not constrained by default. To check that all built-in entries satisfy the common interface, use `satisfies RegistryEntries<Base>`.
 
 ```ts
-import { TypedRegistry, type RegistryEntries } from '@niche-works/typed-registry';
+import {
+  TypedRegistry,
+  type RegistryEntries,
+} from '@fringeworks/typed-registry';
 
 export const validators = new TypedRegistry({
   required: Required,
@@ -134,7 +137,7 @@ import type {
   RegistryEntries,
   ResolveSpec,
   TypedRegistry,
-} from '@niche-works/typed-registry';
+} from '@fringeworks/typed-registry';
 
 export type Schema<E> = Record<string, ResolveSpec<E>[]>;
 
@@ -170,7 +173,9 @@ For settings without types such as JSON, check the key with `has` and give the t
 
 ```ts
 if (validators.has(json.key)) {
-  validators.resolveSpec(json as ResolveSpec<RegistryEntriesOf<typeof validators>>);
+  validators.resolveSpec(
+    json as ResolveSpec<RegistryEntriesOf<typeof validators>>,
+  );
 }
 ```
 
@@ -217,18 +222,18 @@ When also providing a preset registry with all entries, put it in a separate mod
 
 ## Types
 
-| Type                         | Description                                                                         |
-| ---------------------------- | ----------------------------------------------------------------------------------- |
-| `TypedRegistry<E, Base>`     | The registry. Specify `Base` to use resolved values as `Base`                       |
-| `RegistryEntries<Base>`      | Entries. Use it as the constraint of `E`, or with `satisfies` to check entries      |
-| `RegistryEntriesOf<R>`       | Entries of a registry                                                               |
-| `ResolveSpec<E>`             | Union of `{ key, args }` pairs for each key                                         |
-| `RegistryKey<E>`             | Keys                                                                                |
-| `ResolveArgs<E, K>`          | `args` for the key                                                                  |
-| `Resolved<Base, E, K>`       | Return type of `resolve` for the key                                                |
-| `RegistryRaw<E, K>`          | Registered class / function / value for the key                                     |
-| `RegistryValue<E>`           | Union of all resolved values                                                        |
-| `TypedRegistryOptions`       | Options of the constructor and `extend`                                             |
+| Type                     | Description                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `TypedRegistry<E, Base>` | The registry. Specify `Base` to use resolved values as `Base`                  |
+| `RegistryEntries<Base>`  | Entries. Use it as the constraint of `E`, or with `satisfies` to check entries |
+| `RegistryEntriesOf<R>`   | Entries of a registry                                                          |
+| `ResolveSpec<E>`         | Union of `{ key, args }` pairs for each key                                    |
+| `RegistryKey<E>`         | Keys                                                                           |
+| `ResolveArgs<E, K>`      | `args` for the key                                                             |
+| `Resolved<Base, E, K>`   | Return type of `resolve` for the key                                           |
+| `RegistryRaw<E, K>`      | Registered class / function / value for the key                                |
+| `RegistryValue<E>`       | Union of all resolved values                                                   |
+| `TypedRegistryOptions`   | Options of the constructor and `extend`                                        |
 
 ## License
 
